@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive Clock</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f0f0f0;
+    }
+    .clock {
+      position: relative;
+      width: 300px;
+      height: 300px;
+      border: 10px solid #333;
+      border-radius: 50%;
+      background-color: #fff;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    }
+    .hand {
+      position: absolute;
+      width: 6px;
+      background-color: black;
+      top: 50%;
+      left: 50%;
+      transform-origin: 50% 100%; /* Rotate from the bottom (center of the clock) */
+      transform: translateX(-50%) translateY(-100%);
+      cursor: pointer;
+    }
+    .hour-hand {
+      height: 60px;
+      background-color: #333;
+    }
+    .minute-hand {
+      height: 90px;
+      background-color: #666;
+    }
+    .center-dot {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      background-color: #333;
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+  </style>
+</head>
+<body>
+
+<div class="clock" id="clock">
+  <div class="hand hour-hand" id="hour-hand"></div>
+  <div class="hand minute-hand" id="minute-hand"></div>
+  <div class="center-dot"></div>
+</div>
+
+<script>
+  const clock = document.getElementById('clock');
+  const hourHand = document.getElementById('hour-hand');
+  const minuteHand = document.getElementById('minute-hand');
+
+  let currentHand = null;
+  let initialAngle = 0;
+  let isDragging = false;
+
+  // Function to calculate the angle of the mouse relative to the center of the clock
+  function calculateAngle(event) {
+    const rect = clock.getBoundingClientRect();
+    const clockCenterX = rect.left + rect.width / 2;
+    const clockCenterY = rect.top + rect.height / 2;
+    const angle = Math.atan2(event.clientY - clockCenterY, event.clientX - clockCenterX);
+    return angle * (180 / Math.PI) + 90; // convert radian to degrees, adjust for 0deg pointing to top
+  }
+
+  // Function to start dragging
+  function startDrag(event, hand) {
+    currentHand = hand;
+    isDragging = true;
+    initialAngle = calculateAngle(event) - getCurrentRotation(currentHand);
+    event.preventDefault();
+  }
+
+  // Function to update hand rotation while dragging
+  function drag(event) {
+    if (!isDragging || !currentHand) return;
+
+    const angle = calculateAngle(event) - initialAngle;
+    currentHand.style.transform = `translateX(-50%) translateY(-100%) rotate(${angle}deg)`;
+  }
+
+  // Function to stop dragging
+  function stopDrag() {
+    isDragging = false;
+    currentHand = null;
+  }
+
+  // Function to get the current rotation angle of an element
+  function getCurrentRotation(element) {
+    const style = window.getComputedStyle(element);
+    const transform = style.getPropertyValue("transform");
+    if (transform !== 'none') {
+      const values = transform.split('(')[1].split(')')[0].split(',');
+      const angle = Math.round(Math.atan2(values[1], values[0]) * (180 / Math.PI));
+      return angle < 0 ? angle + 360 : angle;
+    }
+    return 0; // If no transformation, return 0 degrees
+  }
+
+  // Function to set the clock to the current time
+  function setClockToCurrentTime() {
+    const now = new Date();
+
+    // Get current time
+    const hours = now.getHours();
+    const minutes = now.getMinutes();
+
+    // Calculate angles for the hands
+    const minuteAngle = (minutes * 6);  // 360° / 60 = 6° per minute
+    const hourAngle = (hours % 12) * 30 + (minutes / 2); // 360° / 12 = 30° per hour, plus a fraction based on minutes
+
+    // Set the initial angles for the hands
+    minuteHand.style.transform = `translateX(-50%) translateY(-100%) rotate(${minuteAngle}deg)`;
+    hourHand.style.transform = `translateX(-50%) translateY(-100%) rotate(${hourAngle}deg)`;
+  }
+
+  // Attach event listeners for dragging the clock hands (Mouse)
+  hourHand.addEventListener('mousedown', (event) => startDrag(event, hourHand));
+  minuteHand.addEventListener('mousedown', (event) => startDrag(event, minuteHand));
+
+  // Attach event listeners for dragging the clock hands (Touch)
+  hourHand.addEventListener('touchstart', (event) => startDrag(event.touches[0], hourHand));
+  minuteHand.addEventListener('touchstart', (event) => startDrag(event.touches[0], minuteHand));
+
+  // Listen for mousemove and touchmove to handle dragging
+  document.addEventListener('mousemove', drag);
+  document.addEventListener('touchmove', (event) => {
+    event.preventDefault(); // Prevent scrolling during drag
+    drag(event.touches[0]);
+  });
+
+  // Stop dragging on mouseup or touchend
+  document.addEventListener('mouseup', stopDrag);
+  document.addEventListener('touchend', stopDrag);
+
+  // Prevent text selection during dragging
+  document.addEventListener('dragstart', (event) => event.preventDefault());
+
+  // Set the clock hands to the current time when the page loads
+  window.onload = setClockToCurrentTime;
+</script>
+
+</body>
+</html>
