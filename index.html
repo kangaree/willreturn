@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Interactive Clock</title>
+  <title>Will Return Clock</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -13,6 +13,26 @@
       height: 100vh;
       margin: 0;
       background-color: #f0f0f0;
+      flex-direction: column;
+    }
+    .container {
+      text-align: center;
+    }
+    .will-return {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 20px; /* Increase space between text and clock */
+      color: #333;
+    }
+    .blue-square {
+      position: relative;
+      width: 340px; /* Increased width to add more padding */
+      height: 340px; /* Increased height to add more padding */
+      background-color: blue; /* Fill the square with blue */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 10px; /* Optional rounded corners for a smoother look */
     }
     .clock {
       position: relative;
@@ -29,17 +49,17 @@
       background-color: black;
       top: 50%;
       left: 50%;
-      transform-origin: 50% 100%; /* Rotate from the bottom (center of the clock) */
+      transform-origin: 50% 100%;
       transform: translateX(-50%) translateY(-100%);
       cursor: pointer;
     }
     .hour-hand {
       height: 60px;
-      background-color: #333;
+      background-color: #D32F2F; /* Red shade */
     }
     .minute-hand {
       height: 90px;
-      background-color: #666;
+      background-color: #FF5722; /* Different red shade */
     }
     .center-dot {
       position: absolute;
@@ -51,14 +71,26 @@
       left: 50%;
       transform: translate(-50%, -50%);
     }
+    .number {
+      position: absolute;
+      font-size: 18px;
+      font-weight: bold;
+      color: black;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
 
-<div class="clock" id="clock">
-  <div class="hand hour-hand" id="hour-hand"></div>
-  <div class="hand minute-hand" id="minute-hand"></div>
-  <div class="center-dot"></div>
+<div class="container">
+  <div class="will-return">WILL RETURN</div>
+  <div class="blue-square" id="blue-square">
+    <div class="clock" id="clock">
+      <div class="hand hour-hand" id="hour-hand"></div>
+      <div class="hand minute-hand" id="minute-hand"></div>
+      <div class="center-dot"></div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -130,6 +162,32 @@
     hourHand.style.transform = `translateX(-50%) translateY(-100%) rotate(${hourAngle}deg)`;
   }
 
+  // Function to add numbers to the clock
+  function addNumbersToClock() {
+    const numberSize = 18; // Size of each number in pixels
+    const radius = 130; // The distance from the center of the clock to where the numbers should appear
+
+    for (let i = 1; i <= 12; i++) {
+      const number = document.createElement('div');
+      number.classList.add('number');
+      number.textContent = i;
+
+      // Calculate the angle for each number
+      const angle = (i - 3) * 30; // Each hour is 30 degrees apart, starting from 12 o'clock
+      const radian = (Math.PI / 180) * angle; // Convert degrees to radians
+
+      // Position the number using trigonometry, adding a centering offset for the number size
+      const x = 150 + radius * Math.cos(radian) - numberSize / 2; // Adjust for centering the number
+      const y = 150 + radius * Math.sin(radian) - numberSize / 2; // Adjust for centering the number
+
+      // Position the number on the clock
+      number.style.left = `${x}px`; 
+      number.style.top = `${y}px`;
+
+      clock.appendChild(number);
+    }
+  }
+
   // Attach event listeners for dragging the clock hands (Mouse)
   hourHand.addEventListener('mousedown', (event) => startDrag(event, hourHand));
   minuteHand.addEventListener('mousedown', (event) => startDrag(event, minuteHand));
@@ -153,7 +211,10 @@
   document.addEventListener('dragstart', (event) => event.preventDefault());
 
   // Set the clock hands to the current time when the page loads
-  window.onload = setClockToCurrentTime;
+  window.onload = () => {
+    setClockToCurrentTime();
+    addNumbersToClock(); // Add numbers to the clock after the page loads
+  };
 </script>
 
 </body>
